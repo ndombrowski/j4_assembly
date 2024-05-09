@@ -1,59 +1,61 @@
-# J4 genome assembly using Trycycler {#j4-genome-assembly-using-trycycler}
+# J4 genome assembly using Trycycler
 
-## Description {#description}
+## Description
 
 Workflow to assemble the Alteromonas J4 genome. To generate the most optimal assembly of the genome, different assembly strategies were tested:
 
 1.  Cleaning of the data with chopper, assembly with Flye and polishing with several rounds of Medaka followed by polishing with Homopolish. This approach did not lead to an improved version of the initial assembly based on the average protein length.
 2.  The raw sequence reads were subset with Filtlong to only work with the 90, 75, 50, 30, 15, 10 and 5% best reads to increase the overall read quality. Afterwards, an assembly was generated for each subset with Flye. This approach did not lead to an improved version of the initial assembly based on the average protein length.
-3.  The raw reads were subsampled and multiple assemblies were generated with the following tools: Flye, Miniams + Minipolish, Raven and Unicycler. Afterwards, Trycycler was used to generate a consensus assembly, which was then polished with Homopolish. This strategy gave the best results and the exact code used can be found in this notebook.
+3.  The raw reads were subsampled and multiple assemblies were generated with the following tools: Flye, Miniams + Minipolish, Raven and Unicycler. Afterwards, Trycycler was used to generate a consensus assembly, which was then polished with Homopolish.   
+  
+The third strategy gave the best results and the exact code used can be found in this notebook.
 
 The citations for key software used in this workflow can be found in the `references.bib` file
 
-## Table of contents {#table-of-contents}
+## Table of contents
 
--   [J4 genome assembly using Trycycler](#j4-genome-assembly-using-trycycler)
-    -   [Description](#description)
-    -   [Table of contents](#table-of-contents)
-    -   [Used software versions:](#used-software-versions)
-    -   [Set working directory](#set-working-directory)
-    -   [Inspect the quality of the data](#inspect-the-quality-of-the-data)
-    -   [Estimate genome size](#estimate-genome-size)
-    -   [Remove adapters](#remove-adapters)
-    -   [Filter reads](#filter-reads)
-    -   [Assemble with Trycycler](#assemble-with-trycycler)
-        -   [Subsample reads](#subsample-reads)
-        -   [Run Assemblies](#run-assemblies)
-        -   [Cluster contigs](#cluster-contigs)
-        -   [Reconcile contigs](#reconcile-contigs)
-        -   [Run MSA](#run-msa)
-        -   [Partition reads](#partition-reads)
-        -   [Generate a consensus](#generate-a-consensus)
-        -   [Check raw assembly](#check-raw-assembly)
-            -   [Run prokka to identify CDS](#run-prokka-to-identify-cds)
-            -   [Run pseudofinder to identify pseudogenes](#run-pseudofinder-to-identify-pseudogenes)
-    -   [Polishing the assembly with medaka](#polishing-the-assembly-with-medaka)
-        -   [Check medaka assembly](#check-medaka-assembly)
-            -   [Run prokka](#run-prokka)
-            -   [Run pseudofinder](#run-pseudofinder)
-    -   [Polishing with homopolish](#polishing-with-homopolish)
-        -   [Check homopolish assembly](#check-homopolish-assembly)
-            -   [Run prokka](#run-prokka-1)
-            -   [Run pseudofinder](#run-pseudofinder-1)
-            -   [Run quast](#run-quast)
-            -   [Run qualimap](#run-qualimap)
-                -   [Do read mapping](#do-read-mapping)
-                -   [Run qualimap](#run-qualimap-1)
-            -   [Check taxonomy with Gtdbtk](#check-taxonomy-with-gtdbtk)
-            -   [Check completeness with Checkm2](#check-completeness-with-checkm2)
-    -   [Run Circlator to rotate](#run-circlator-to-rotate)
-    -   [Run dnaapler v0.7.0 to rotate](#run-dnaapler-v070-to-rotate)
-        -   [CheckM on dnaapler output](#checkm-on-dnaapler-output)
-            -   [Run prokka](#run-prokka-2)
-            -   [Run pseudofinder](#run-pseudofinder-2)
-    -   [Summary](#summary)
+- [J4 genome assembly using Trycycler](#j4-genome-assembly-using-trycycler)
+  - [Description](#description)
+  - [Table of contents](#table-of-contents)
+  - [Used software versions](#used-software-versions)
+  - [Set working directory](#set-working-directory)
+  - [Inspect the quality of the data](#inspect-the-quality-of-the-data)
+  - [Estimate genome size](#estimate-genome-size)
+  - [Remove adapters](#remove-adapters)
+  - [Filter reads](#filter-reads)
+  - [Assemble with Trycycler](#assemble-with-trycycler)
+    - [Subsample reads](#subsample-reads)
+    - [Run Assemblies](#run-assemblies)
+    - [Cluster contigs](#cluster-contigs)
+    - [Reconcile contigs](#reconcile-contigs)
+    - [Run MSA](#run-msa)
+    - [Partition reads](#partition-reads)
+    - [Generate a consensus](#generate-a-consensus)
+    - [Check raw assembly](#check-raw-assembly)
+      - [Run prokka to identify CDS](#run-prokka-to-identify-cds)
+      - [Run pseudofinder to identify pseudogenes](#run-pseudofinder-to-identify-pseudogenes)
+  - [Polishing the assembly with medaka](#polishing-the-assembly-with-medaka)
+    - [Check medaka assembly](#check-medaka-assembly)
+      - [Run prokka](#run-prokka)
+      - [Run pseudofinder](#run-pseudofinder)
+  - [Polishing with homopolish](#polishing-with-homopolish)
+    - [Check homopolish assembly](#check-homopolish-assembly)
+      - [Run prokka](#run-prokka-1)
+      - [Run pseudofinder](#run-pseudofinder-1)
+      - [Run quast](#run-quast)
+      - [Run qualimap](#run-qualimap)
+        - [Do read mapping](#do-read-mapping)
+        - [Run qualimap](#run-qualimap-1)
+      - [Check taxonomy with Gtdbtk](#check-taxonomy-with-gtdbtk)
+      - [Check completeness with Checkm2](#check-completeness-with-checkm2)
+  - [Run Circlator to rotate](#run-circlator-to-rotate)
+  - [Run dnaapler to rotate](#run-dnaapler-to-rotate)
+    - [CheckM on dnaapler output](#checkm-on-dnaapler-output)
+      - [Run prokka](#run-prokka-2)
+      - [Run pseudofinder](#run-pseudofinder-2)
+  - [Summary](#summary)
 
-## Used software versions: {#used-software-versions}
+## Used software versions
 
 -   Porechop v0.2.4, [link to github](https://github.com/rrwick/Porechop)
 -   Filtlong v0.2.1, [link to github](https://github.com/rrwick/Filtlong)
@@ -75,16 +77,17 @@ The citations for key software used in this workflow can be found in the `refere
 -   Pseudofinder 1.1.0 [@syberg-olsen2022]
 -   Homopolish 0.4.1 [@huang2021]
 -   Gtdbtk v2.3.2 [@chaumeil2019] together with the GTDB r214 database [@parks2020]
--   Circlator 1.5.5
+-   Circlator c1.5.5
+-   Dnaapler v0.7.0
 
-## Set working directory {#set-working-directory}
+## Set working directory
 
 ```{bash}
 wdir="/zfs/omics/projects/sargo/j4_assembly_analysis"
 cd $wdir
 ```
 
-## Inspect the quality of the data {#inspect-the-quality-of-the-data}
+## Inspect the quality of the data
 
 Notice: At this step, the cleaned data from the first assembly approach was recycled and the code below was added this report for convenience.
 
@@ -107,17 +110,14 @@ conda deactivate
 
 We work with:
 
--   213,459 reads
-
--   591,314,594 bp
-
--   87 bp min, 2770 bp avg, 80517 max
-
--   Avg quality 12.85
+-   total of 213,459 reads
+-   total length of 591,314,594 bp
+-   87 bp min, 2770 bp avg, 80517 max read length
+-   Avgerage quality 12.85
 
 Based on these results, I decided that I won't touch the quality score but I will discard reads that are too short.
 
-## Estimate genome size {#estimate-genome-size}
+## Estimate genome size
 
 Notice: At this step, the genome size was estimated during the first assembly approach. The code below was taken from that report to allow user reproducing this workflow to view all steps in an ordered manner.
 
@@ -152,7 +152,7 @@ Model Fit                     93.5762%          94.4432%
 Read Error Rate               2.42668%          2.42668%  
 ```
 
-## Remove adapters {#remove-adapters}
+## Remove adapters
 
 ```{bash}
 mkdir scripts 
@@ -172,7 +172,7 @@ porechop --input data/Nanopore_J4_SuperBasecalling.fastq.gz \
 seqkit stats -e -a -To results/v1_chopper_flye/filtered_reads/01_porechop/seqkit_stats.tsv results/v1_chopper_flye/filtered_reads/01_porechop/Nanopore_J4_SuperBasecalling_ad.fastq.gz
 ```
 
-## Filter reads {#filter-reads}
+## Filter reads
 
 ```{bash}
 mkdir -p results/v3_trycycler/filtlong/p95
@@ -186,9 +186,9 @@ seqkit stats -e -a -To results/v3_trycycler/filtlong/p95/seqkit_stats.tsv result
 conda deactivate
 ```
 
-## Assemble with Trycycler {#assemble-with-trycycler}
+## Assemble with Trycycler
 
-### Subsample reads {#subsample-reads}
+### Subsample reads
 
 ```{bash}
 mkdir -p results/v3_trycycler/subsampling
@@ -208,7 +208,7 @@ trycycler subsample \
 -   subset_depth = 54.7x
 -   reads per subset: 72,629
 
-### Run Assemblies {#run-assemblies}
+### Run Assemblies
 
 Trycycler was run 3x each using the following assemblers:
 
@@ -297,7 +297,7 @@ Contigs per assembly:
 -   assemblies/assembly_11.fasta:2
 -   assemblies/assembly_12.fasta:1
 
-### Cluster contigs {#cluster-contigs}
+### Cluster contigs
 
 ```{bash}
 mkdir results/v3_trycycler/trycycler
@@ -343,7 +343,7 @@ After running trycycler cluster the newick file was downloaded and explored in F
 -   Assembly cluster_2_C_Utg1376_4497983_bp_119.0x showed a bit a distance between the remaining 10 contigs and could also be considered for removal
 -   We will proceed with the contigs in cluster1 (and thus not further work with the 2 contigs described above).
 
-### Reconcile contigs {#reconcile-contigs}
+### Reconcile contigs
 
 ```{bash}
 trycycler reconcile \
@@ -384,7 +384,7 @@ trycycler reconcile \
      --cluster_dir results/v3_trycycler/trycycler/cluster_001
 ```
 
-### Run MSA {#run-msa}
+### Run MSA 
 
 ```{bash}
 srun --cpus-per-task 20 --mem=10G trycycler msa \
@@ -392,7 +392,7 @@ srun --cpus-per-task 20 --mem=10G trycycler msa \
     --threads 20
 ```
 
-### Partition reads {#partition-reads}
+### Partition reads
 
 ```{bash}
 srun --cpus-per-task 20 --mem=10G  trycycler partition \
@@ -401,7 +401,7 @@ srun --cpus-per-task 20 --mem=10G  trycycler partition \
     --threads 20
 ```
 
-### Generate a consensus {#generate-a-consensus}
+### Generate a consensus 
 
 ```{bash}
 trycycler consensus --cluster_dir results/v3_trycycler/trycycler/cluster_001
@@ -416,9 +416,9 @@ conda deactivate
 
 -   We work with a final assembly consisting of a single contig
 
-### Check raw assembly {#check-raw-assembly}
+### Check raw assembly 
 
-#### Run prokka to identify CDS {#run-prokka-to-identify-cds}
+#### Run prokka to identify CDS 
 
 ```{bash}
 conda activate prokka
@@ -435,7 +435,7 @@ seqtk seq results/v3_trycycler/trycycler/cluster_001/prokka/trycycler_raw.faa | 
 conda deactivate
 ```
 
-#### Run pseudofinder to identify pseudogenes {#run-pseudofinder-to-identify-pseudogenes}
+#### Run pseudofinder to identify pseudogenes 
 
 ```{bash}
 mkdir results/v3_trycycler/trycycler/cluster_001/pseudofinder/
@@ -463,7 +463,7 @@ conda deactivate
     -   Pseudogenes (total): 984
     -   Intact genes: 3599
 
-## Polishing the assembly with medaka {#polishing-the-assembly-with-medaka}
+## Polishing the assembly with medaka 
 
 ```{bash}
 mkdir -p results/v3_trycycler/medaka/r1
@@ -481,9 +481,9 @@ srun --cpus-per-task 20 --mem=50G medaka_consensus \
 conda deactivate
 ```
 
-### Check medaka assembly {#check-medaka-assembly}
+### Check medaka assembly 
 
-#### Run prokka {#run-prokka}
+#### Run prokka
 
 ```{bash}
 conda activate prokka
@@ -500,7 +500,7 @@ seqtk seq results/v3_trycycler/medaka/r1/prokka/trycycler_med.faa | awk 'NR % 2 
 conda deactivate
 ```
 
-#### Run pseudofinder {#run-pseudofinder}
+#### Run pseudofinder 
 
 ```{bash}
 mkdir results/v3_trycycler/medaka/r1/pseudofinder
@@ -530,7 +530,7 @@ conda deactivate
 
 **In this case, medaka seem to make the assembly worse, so I wont proceed with this polished assembly but I will use the trycycler consensus directly!**
 
-## Polishing with homopolish {#polishing-with-homopolish}
+## Polishing with homopolish 
 
 ```{bash}
 mkdir results/v3_trycycler/homopolish 
@@ -555,9 +555,9 @@ conda deactivate
 
 -   To find a set of genomes to compare the assembly to mash_threshold needed to be lower to 0.8 This is consistent with gtdbtk suggesting that J4 is a new genus with only very distant genomes in its database based on the ANI. Its unclear if this is due to J4 being indeed a new genus or the sequence quality increasing the distance to reference genomes. Regardless, it is something to keep in mind as the more similar the reference genomes are, the better the polishing will go
 
-### Check homopolish assembly {#check-homopolish-assembly}
+### Check homopolish assembly 
 
-#### Run prokka {#run-prokka-1}
+#### Run prokka
 
 ```{bash}
 conda activate prokka
@@ -574,7 +574,7 @@ seqtk seq results/v3_trycycler/homopolish/prokka/trycycler_homopol.faa | awk 'NR
 conda deactivate
 ```
 
-#### Run pseudofinder {#run-pseudofinder-1}
+#### Run pseudofinder 
 
 ```{bash}
 mkdir results/v3_trycycler/homopolish/pseudofinder
@@ -592,7 +592,7 @@ srun --cpus-per-task 20 --mem=10G pseudofinder.py annotate \
 conda deactivate
 ```
 
-#### Run quast {#run-quast}
+#### Run quast 
 
 ```{bash}
 #run quast
@@ -609,9 +609,9 @@ srun --cpus-per-task 20 --mem=10G quast.py \
 conda deactivate 
 ```
 
-#### Run qualimap {#run-qualimap}
+#### Run qualimap
 
-##### Do read mapping {#do-read-mapping}
+##### Do read mapping 
 
 ```{bash}
 #read mapping
@@ -634,7 +634,7 @@ rm results/v3_trycycler/homopolish/minimap2/homopolished_mapped.bam
 conda deactivate
 ```
 
-##### Run qualimap {#run-qualimap-1}
+##### Run qualimap 
 
 ```{bash}
 #check quality
@@ -649,7 +649,7 @@ srun --cpus-per-task 20 --mem=50G  qualimap bamqc \
 conda deactivate
 ```
 
-#### Check taxonomy with Gtdbtk {#check-taxonomy-with-gtdbtk}
+#### Check taxonomy with Gtdbtk 
 
 ```{bash}
 mkdir results/v3_trycycler/homopolish/gtdb 
@@ -665,7 +665,7 @@ srun --cpus-per-task 20 --mem=100G gtdbtk classify_wf --genome_dir  results/v3_t
 conda deactivate
 ```
 
-#### Check completeness with Checkm2 {#check-completeness-with-checkm2}
+#### Check completeness with Checkm2
 
 ```{bash}
 mkdir results/v3_trycycler/homopolish/checkm2  
@@ -699,7 +699,7 @@ conda deactivate
     -   4,492,914 genome size
     -   0.44 GC
 
-## Run Circlator to rotate {#run-circlator-to-rotate}
+## Run Circlator to rotate 
 
 ```{bash}
 mkdir results/v3_trycycler/circlator/
@@ -719,7 +719,7 @@ conda deactivate
 -   Since we don't have a dnaA database, dnaA was not found, so a gene predicted by prodigal was used - the match was on the forward strand.
 -   this is not ideal, so I checked for more tools that we can use
 
-## Run dnaapler v0.7.0 to rotate
+## Run dnaapler to rotate
 
 Link to [github](https://github.com/gbouras13/dnaapler)
 
@@ -741,7 +741,7 @@ conda deactivate
 -   258 AAs were identical, with an overall identity of 61.14%.
 -   The CDS most overlapping the tophit has a start coordinate of 955704
 
-### CheckM on dnaapler output {#checkm-on-dnaapler-output}
+### CheckM on dnaapler output 
 
 ```{bash}
 mkdir results/v3_trycycler/dnaapler/checkm2  
@@ -757,7 +757,7 @@ srun --cpus-per-task 20 --mem=10G checkm2 predict --threads 30 \
 conda deactivate
 ```
 
-#### Run prokka {#run-prokka-2}
+#### Run prokka 
 
 ```{bash}
 conda activate prokka
@@ -776,7 +776,7 @@ seqtk seq results/v3_trycycler/dnaapler/prokka/dnaapler.faa | awk 'NR % 2 == 0' 
 conda deactivate
 ```
 
-#### Run pseudofinder {#run-pseudofinder-2}
+#### Run pseudofinder 
 
 ```{bash}
 mkdir results/v3_trycycler/dnaapler/pseudofinder
@@ -809,7 +809,7 @@ conda deactivate
     -   4,492,914 genome size
     -   0.44 GC
 
-## Summary {#summary}
+## Summary 
 
 **Genome stats when looking at the genome downloaded from [NCBI, GCF_036870955:](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_036870955.1/)**
 
